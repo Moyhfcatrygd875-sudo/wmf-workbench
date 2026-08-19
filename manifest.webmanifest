@@ -1,0 +1,14 @@
+{
+  "name": "百事达商行",
+  "short_name": "百事达",
+  "description": "百事达商行 · 服装外贸管理 · 订单 · 库存 · 客户 · 云同步",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#8B2C3A",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
