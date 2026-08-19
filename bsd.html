@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#800000">
+    <title>百事达外贸服装工作台</title>
+    <!-- 使用 CDN 链接修复 GitHub Pages 加载问题 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        /* ===== 云同步配置 ===== */
+        window.SUPABASE_URL = 'https://oxlkjkmpmzzncezrbkua.supabase.co';
+        window.SUPABASE_KEY = 'sb_publishable_qscJeObo-S1uRIY4u6eNBw_J2LvDYxA';
+    </script>
+    <style>
+        :root {
+            /* 百事达主题色 - 深红色 */
+            --bg: #f9f5f5;
+            --card: #ffffff;
+            --primary: #800000;
+            --primary-d: #660000;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e0d4d4;
+            --green: #16a34a;
+            --green-bg: #dcfce7;
+            --red: #dc2626;
+            --red-bg: #fee2e2;
+            --gold: #ca8a04;
+            --gold-bg: #fef3c7;
+            --gray: #6b7280;
+            --gray-bg: #f3f4f6;
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,.12);
+        }
+        *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+        body{padding-bottom:80px;min-height:100vh}
+        button{font-family:inherit;cursor:pointer;border:none;background:none}
+        input,select,textarea{font-family:inherit;font-size:14px}
+        .hidden{display:none!important}
+        /* 顶栏 */
+        .topbar{position:sticky;top:0;z-index:50;background:var(--primary);color:#fff;padding:8px 12px;box-shadow:var(--shadow)}
+        .topbar h1{margin:0;font-size:17px;font-weight:600;display:flex;align-items:center;gap:6px}
+        .topbar .sub{font-size:11px;opacity:.85;margin-top:1px}
+        .search-wrap{margin-top:8px;display:flex;gap:6px}
+        .search-wrap input{flex:1;padding:9px 12px;border-radius:8px;border:none;font-size:14px;background:#fff}
+        .search-wrap .btn-search{padding:0 14px;border-radius:8px;background:rgba(255,255,255,.18);color:#fff;font-weight:600}
+        /* tab */
+        .tabs{position:sticky;top:78px;z-index:40;display:flex;background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .tabs::-webkit-scrollbar{display:none}
+        .tab{flex:1 0 0;padding:11px 4px;text-align:center;font-size:13px;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;min-width:64px}
+        .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+        /* 主体 */
+        .view{padding:12px;display:none}
+        .view.active{display:block}
+        .section{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:var(--shadow)}
+        /* 卡片网格 */
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+        .prod-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;position:relative}
+        .prod-card .thumb{width:100%;aspect-ratio:1;background:var(--gray-bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
+        .prod-card .thumb img{width:100%;height:100%;object-fit:cover}
+        .prod-card .thumb .ph{color:var(--muted);font-size:11px}
+        .prod-card .info{padding:8px}
+        .prod-card .sn{font-weight:600;font-size:13px;word-break:break-all}
+        .prod-card .price{color:var(--primary);font-weight:600;margin-top:2px}
+        .prod-card .stock{position:absolute;top:6px;right:6px;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;background:rgba(0,0,0,.55);color:#fff}
+        .prod-card .stock.low{background:var(--red)}
+        .prod-card .colors{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+        .prod-card .color-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+        /* 表格 */
+        .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+        table.tbl th,table.tbl td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+        table.tbl th{background:var(--gray-bg);color:var(--muted);font-weight:600;font-size:12px;position:sticky;top:0}
+        table.tbl tr{cursor:pointer}
+        table.tbl tr:hover{background:#f9fafb}
+        table.tbl td.num{text-align:right;font-variant-numeric:tabular-nums}
+        .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+        .badge.in{background:var(--green-bg);color:var(--green)}
+        .badge.out{background:var(--red-bg);color:var(--red)}
+        .badge.income{background:var(--gold-bg);color:var(--gold)}
+        .badge.expense{background:var(--gray-bg);color:var(--gray)}
+        .badge.cur{background:#fbe2e2;color:var(--primary)}
+        .badge.company{background:#fef3c7;color:#92400e}
+        /* 按钮 */
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;background:var(--gray-bg);color:var(--text);min-height:40px}
+        .btn:active{transform:translateY(1px)}
+        .btn-primary{background:var(--primary);color:#fff}
+        .btn-danger{background:var(--red);color:#fff}
+        .btn-success{background:var(--green);color:#fff}
+        .btn-ghost{background:transparent;color:var(--primary);padding:6px 10px;min-height:auto}
+        .btn-block{width:100%}
+        .btn-sm{padding:5px 9px;font-size:12px;min-height:auto}
+        .fab{position:fixed;right:16px;bottom:90px;width:54px;height:54px;border-radius:50%;background:var(--primary);color:#fff;font-size:28px;box-shadow:var(--shadow-lg);z-index:30;display:flex;align-items:center;justify-content:center;line-height:1}
+        /* 底部 dock */
+        .dock{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:35;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+        .dock button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:10px;color:var(--muted);min-height:50px}
+        .dock button.active{color:var(--primary)}
+        .dock button svg{width:22px;height:22px}
+        /* 底部弹层 sheet */
+        .sheet-mask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
+        .sheet-mask.show{display:flex}
+        .sheet{background:#fff;width:100%;max-width:640px;max-height:92vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;overflow:hidden;animation:slideup .25s ease}
+        @keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .sheet-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .sheet-head h3{margin:0;font-size:16px;font-weight:600}
+        .sheet-body{padding:14px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+        .sheet-foot{padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+        /* 表单 */
+        .field{margin-bottom:12px}
+        .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
+        .field input,.field select,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:#fff}
+        .field textarea{resize:vertical;min-height:60px}
+        .field-row{display:flex;gap:8px}
+        .field-row .field{flex:1}
+        .color-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+        .color-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:14px;background:var(--gray-bg);font-size:12px}
+        .color-chip .rm{cursor:pointer;color:var(--red);font-weight:700;margin-left:2px}
+        .color-add{display:flex;gap:6px;margin-top:6px}
+        .color-add input[type=text]{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px}
+        .color-add input[type=color]{width:36px;height:36px;padding:2px;border:1px solid var(--border);border-radius:6px;background:#fff}
+        /* 订单明细行 */
+        .item-row{background:var(--gray-bg);border-radius:10px;padding:10px;margin-bottom:8px}
+        .item-row .row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .item-row .row-top span{font-size:12px;color:var(--muted)}
+        .item-row .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+        .item-row .grid3 .field{margin-bottom:6px}
+        .item-row .grid3 .field input,.item-row .grid3 .field select{padding:7px 8px;font-size:12px}
+        .item-sub{display:flex;justify-content:space-between;padding:4px 2px;font-size:12px;color:var(--muted)}
+        .item-sub b{color:var(--primary)}
+        /* toast */
+        .toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);background:rgba(20,20,20,.92);color:#fff;padding:10px 16px;border-radius:8px;z-index:200;font-size:13px;max-width:80%;text-align:center;display:none}
+        .toast.show{display:block;animation:fade .3s}
+        @keyframes fade{from{opacity:0}to{opacity:1}}
+        /* 搜索结果 */
+        .search-cat{font-size:12px;color:var(--muted);font-weight:600;padding:8px 4px 4px;border-bottom:1px solid var(--border);margin-top:8px}
+        .search-item{padding:10px 8px;border-bottom:1px solid var(--border);cursor:pointer}
+        .search-item:active{background:var(--gray-bg)}
+        .search-item .t{font-weight:600;font-size:13px}
+        .search-item .d{font-size:12px;color:var(--muted);margin-top:2px}
+        .highlight{background:#fff3cd;border-radius:2px;padding:0 2px}
+        /* 统计卡 */
+        .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+        .stat{background:#fff;border-radius:10px;padding:10px;box-shadow:var(--shadow)}
+        .stat .lbl{font-size:11px;color:var(--muted)}
+        .stat .val{font-size:18px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+        .stat .val.income{color:var(--gold)}
+        .stat .val.expense{color:var(--red)}
+        .stat .val.net{color:var(--primary)}
+        .empty{text-align:center;padding:40px 16px;color:var(--muted);font-size:13px}
+        .empty svg{width:48px;height:48px;opacity:.4;margin-bottom:8px}
+        .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border);font-size:13px}
+        .kv .v{font-weight:600;text-align:right;word-break:break-all}
+        .detail-block{margin-bottom:14px}
+        .detail-block h4{margin:0 0 6px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+        .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+        .switch{position:relative;width:42px;height:24px;background:#ccc;border-radius:14px;transition:.2s;flex-shrink:0}
+        .switch.on{background:var(--green)}
+        .switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s}
+        .switch.on::after{left:20px}
+        img.big{max-width:100%;border-radius:8px;display:block;margin:0 auto}
+        /* 导入导出 */
+        .imp-opt{display:flex;gap:8px;margin:8px 0}
+        .imp-opt label{display:flex;align-items:center;gap:4px;font-size:13px;background:var(--gray-bg);padding:6px 10px;border-radius:8px}
+        .file-label{display:block;padding:20px;border:2px dashed var(--border);border-radius:10px;text-align:center;color:var(--muted);cursor:pointer;margin:8px 0}
+        .file-label:active{background:var(--gray-bg)}
+        .preview-tbl{width:100%;font-size:12px;border-collapse:collapse;margin-top:8px}
+        .preview-tbl th,.preview-tbl td{padding:5px;border:1px solid var(--border);text-align:left}
+        /* 登录层 */
+        .login-mask{position:fixed;inset:0;background:linear-gradient(160deg,#800000,#4a0000);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+        .login-mask.show{display:flex}
+        .login-card{background:#fff;border-radius:16px;padding:26px 22px;width:100%;max-width:360px;box-shadow:var(--shadow-lg)}
+        .login-card h2{margin:0 0 4px;font-size:20px;text-align:center}
+        .login-card .sub{text-align:center;color:var(--muted);font-size:12px;margin-bottom:16px}
+        .login-card .err{background:var(--red-bg);color:var(--red);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px;display:none}
+        .login-card .info{background:#fbe2e2;color:#800000;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px;display:none}
+        .login-card .field{margin-bottom:12px}
+        .login-card .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+        .login-card .field input{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px}
+        .login-card .btn-block{margin-top:6px}
+        .login-card .switch-line{text-align:center;margin-top:14px;font-size:13px;color:var(--muted)}
+        .login-card .switch-line a{color:var(--primary);cursor:pointer;font-weight:600}
+        .sync-status{position:fixed;left:10px;bottom:74px;z-index:60;background:rgba(0,0,0,.72);color:#fff;font-size:11px;padding:4px 9px;border-radius:12px;display:none}
+        .sync-status.on{display:block}
+        .sync-status.sync{background:#800000}
+        .sync-status.err{background:var(--red)}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>🍷 百事达工作台</h1>
+        <div class="sub" id="dataMeta">数据：本地浏览器</div>
+        <div class="search-wrap">
+            <input id="globalSearch" type="search" placeholder="🔍 搜唛头 / 订单号 / 款号 / 地址 / 备注…" autocomplete="off">
+            <button class="btn-search" onclick="doGlobalSearch(document.getElementById('globalSearch').value)">搜索</button>
+        </div>
+    </div>
+    <div class="tabs" id="tabBar">
+        <div class="tab active" data-tab="products">📦 商品</div>
